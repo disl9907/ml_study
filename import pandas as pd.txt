@@ -1,0 +1,9 @@
+import pandas as pd
+import os
+
+# CSV 파일 읽기
+csv_file_path = '/content/drive/MyDrive/archive (2)/No_Apply_Grayscale/No_Apply_Grayscale/Vehicles_Detection.v8i.tensorflow/train/_annotations.csv'
+df = pd.read_csv(csv_file_path)
+
+# 데이터프레임 확인
+print(df.head())
