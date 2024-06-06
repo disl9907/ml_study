@@ -1,0 +1,4 @@
+def Naive_Process(df, col):
+  each_df = df[[col]].copy()
+  each_df['Naive_Forecast'] = each_df.shift(1)
+  each_df.columns = ['y', 'Naive_Forecast']
