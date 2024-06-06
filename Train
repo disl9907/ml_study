@@ -1,0 +1,69 @@
+#Expect Naive
+
+def train_prophet(train_df, periods):
+    model = Prophet()
+    model.add_country_holidays(country_name='KR')
+    model.fit(train_df)
+
+    future = model.make_future_dataframe(periods=periods)
+    forecast = model.predict(future)
+
+    fig1 = model.plot(forecast)
+    fig2 = model.plot_components(forecast)  # plot holiday, trend, weekly, yearly
+
+    return forecast[['yhat']]
+
+def train_ARIMA(train_df, periods):
+    model = ARIMA(train_df['y'], order=(5, 1, 1)) # order = (p, d, q)
+    model = model.fit()
+
+    forecast = model.forecast(steps = periods)
+
+    return forecast
+
+def train_exponential_smoothing(train_df, periods):
+    model = ExponentialSmoothing(train_df['y'])
+    model = model.fit()
+    forecast = model.forecast(steps = periods)
+    return forecast
+
+def train_linear_regression(train_df, test_df, alpha = 1.0, version=int):
+    X = train_df[['month', 'day']]
+    y = train_df['y']
+
+    x = test_df[['month', 'day']]
+
+    if version == 1:
+      model = Ridge(alpha=alpha)
+    elif version == 2:
+      model = Lasso(alpha=alpha)
+    else:
+      model = LinearRegression()
+    model.fit(X, y)
+
+    forecast = model.predict(x)
+    forecast = pd.Series(forecast, index=x.index)
+    return forecast
+
+def train_LightGBM(train_df, test_df):
+    X = train_df[['month', 'day']]
+    y = train_df['y']
+
+    x = test_df[['month', 'day']]
+
+    # LightGBM 데이터셋 생성
+    train_data = lgb.Dataset(X, label=y)
+
+    # LightGBM 파라미터 설정
+    params = {
+        'objective': 'regression',
+        'verbosity': -1
+    }
+
+    # 모델 학습
+    model = lgb.train(params, train_data)
+
+    forecast = model.predict(x)
+    forecast = pd.Series(forecast, index=x.index)
+
+    return forecast
