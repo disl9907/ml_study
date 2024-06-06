@@ -1,3 +1,6 @@
+import pandas as pd
+import os
+
 class predict_dataset():
   def __init__(self, data_dir, phase, prd):
 
@@ -7,7 +10,6 @@ class predict_dataset():
     self.data_df = pd.read_csv(os.path.join(self.data_dir, phase + '.csv'))
 
   def __len__(self):
-    # 데이터프레임의 행 수를 반환
     return len(self.data_df)
 
   def __getitem__(self, index):
@@ -15,15 +17,13 @@ class predict_dataset():
     return df.iloc[index]
 
   def get_list(self):
-    # prompt: how to get only columns contasins 가격 from a list
     price_columns = [col for col in self.data_df.columns if '가격' in col or 'date' in col]
 
     df = self.data_df[price_columns]
     df.columns = df.columns.str.replace("_가격(원/kg)", "")
-    # 첫 번째 행 삭제
+
     if df.iloc[0].eq(0).any():
         df = df.drop(df.index[0])
-
     df = df.replace(0, method="ffill")
 
     df = df[self.prd]
