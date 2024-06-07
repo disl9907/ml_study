@@ -1,0 +1,51 @@
+data_dir = '/content/drive/MyDrive/predic_price'
+prd = ['date', '배추', '무', '마늘', '양파', '대파', '시금치', '깻잎']
+is_cuda = False
+
+BATCH_SIZE = 6
+DEVICE = torch.device('cuda' if torch.cuda.is_available() and is_cuda else 'cpu')
+
+# 모델 초기화
+input_size = 2
+model = NeuralNetwork(input_size).to(DEVICE)
+
+criterion = nn.MSELoss()
+optimizer = optim.SGD(model.parameters(), lr=0.01)
+num_epochs = 100
+
+all_actual = []
+all_predicted = []
+
+for col in prd[1:]:
+    train_loader = build_dataloader(data_dir, prd, 'train', col)
+    test_loader = build_dataloader(data_dir, prd, 'test', col)
+
+    # 모델 초기화
+    model = NeuralNetwork(input_size).to(DEVICE)
+    optimizer = optim.SGD(model.parameters(), lr=0.01)
+
+    # 모델 훈련
+    train_losses = []
+    for epoch in range(num_epochs):
+        train_loss = train_one_epoch(train_loader, model, optimizer, criterion, DEVICE)
+        train_losses.append(train_loss)
+
+    # 모델 평가
+    model.eval()
+    actuals = []
+    predictions = []
+    with torch.no_grad():
+        for inputs, targets in test_loader:
+            inputs, targets = inputs.to(DEVICE), targets.to(DEVICE)
+            outputs = model(inputs)
+            actuals.extend(targets.cpu().numpy())
+            predictions.extend(outputs.cpu().numpy())
+
+    # 각 농산물에 대한 예측 결과를 전체 리스트에 추가
+    all_actual.extend(actuals)
+    all_predicted.extend(predictions)
+
+# 평가 지표 계산
+mae = mean_absolute_error(all_actual, all_predicted)
+
+print(f'Mean Absolute Error (MAE): {mae:.4f}')
